@@ -28,20 +28,22 @@ void onRequestDistance(byte theAddress, int theDistance)
 
 void URM_06()
 {
-  if (urm.available())
-      onRequestDistance(urm.receivedAddress, urm.receivedContent);
-   static unsigned long sendingTimer=millis();
-    if (millis()-sendingTimer>=1) {
-      sendingTimer=millis();
-      while(!urm.requestDistance(DefaultAddress)) {
-          URM_06();    
-        }}        
+    if (urm.available())
+        onRequestDistance(urm.receivedAddress, urm.receivedContent);
+    static unsigned long sendingTimer = millis();
+    if (millis() - sendingTimer >= 1) {
+        sendingTimer=millis();
+        while(!urm.requestDistance(DefaultAddress)) {
+            URM_06();    
+        }
+    }        
 }
 
   
 void wheel()
 {
-    digitalWrite(6,1);
+    Serial.println("휠함수 호출");
+    digitalWrite(22,1);
     digitalWrite(ENA, HIGH);
     digitalWrite(INA1, HIGH);
     digitalWrite(INA2, LOW);
@@ -63,7 +65,7 @@ void wheel()
     digitalWrite(ENA, LOW);
     digitalWrite(INA1, LOW);
     digitalWrite(INA2, LOW);
-    digitalWrite(6,0);
+    digitalWrite(22,0);
 } 
 
 void compare(int a){ 
@@ -71,22 +73,34 @@ void compare(int a){
     t1=0;
     t2=0;
 
-    
-    t1 = millis();
-    while ((urm.receivedContent >= a-5)&&(urm.receivedContent<= a+5)){ 
-    for(i=0;i<120;i++){ 
-    URM_06();
-    myservo.write(i);
-    delay(50);
-    t2 = millis();
+    Serial.println(t2-t1);
 
-    if ((t2-t1)>=7000){
-      wheel();
-      break;
-    }
-    else if ((urm.receivedContent <= a-5)&&(urm.receivedContent>= a+5))
-    break;
-    }}  
+
+    t1 = millis();
+    bool check = true;
+    while ((urm.receivedContent >= a-5)&&(urm.receivedContent<= a+5) && (check == true)) { 
+      for(i = 0; i < 120; i++) {  // 오류 - 모터 두번 돌아가고 더이상 돌지 않음
+        Serial.println("i값= ");
+        Serial.println(i);
+        URM_06(); // 여기까지만 실행됨 (계속 URM_06 실행 => wheel() 실행 반복) 
+        myservo.write(i);
+        delay(50);
+        t2 = millis();
+
+        Serial.println("t2-t1= ");
+         Serial.println(t2-t1);
+
+        if ((t2-t1) >= 7000){   // 7초가 지나면 동작
+          Serial.println("compare함수 if문 실행");
+          wheel();
+          check=false;
+          break;
+        }
+        
+        else if ((urm.receivedContent <= a-5) && (urm.receivedContent >= a+5))
+          break;
+       }   
+    }  
 }
 
 void setup()
@@ -97,28 +111,29 @@ void setup()
     pinMode(ENA, OUTPUT);
     pinMode(INA1, OUTPUT);
     pinMode(INA2, OUTPUT);
-    pinMode(6, OUTPUT);
+    pinMode(22, OUTPUT);
     digitalWrite(ENA, LOW);
     digitalWrite(INA1, LOW);
     digitalWrite(INA2, LOW);
+    digitalWrite(22,0);
 
     URM_06();
 }
 
 void loop()
 {
-  int i=0;
-  int distant=0;
+  int i = 0;
+  int distant = 0;
 
-  URM_06();
-  URM_06();
-  URM_06();
+  //URM_06();
+  //URM_06();
+  //URM_06();
   distant=urm.receivedContent;
     Serial.print("00:");
     Serial.print(distant);
     Serial.println("mm\n\r");
-  URM_06();
-  URM_06();
+  //URM_06();
+  //URM_06();
   //delay(10);
   if((urm.receivedContent >= distant-5)&&(urm.receivedContent<= distant+5)){
     compare(distant);
@@ -130,4 +145,5 @@ void loop()
       delay(50);
       }}
   else 
-    URM_06();}
+    URM_06();
+}
