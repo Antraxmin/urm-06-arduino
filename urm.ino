@@ -123,16 +123,21 @@ void setup()
     digitalWrite(INA1, LOW);
     digitalWrite(INA2, LOW);
     digitalWrite(22,0);
-
+    URM_06();
 }
 
 void loop()
 {
+  while(true) {
     Serial.println("urm_06 함수 실행");
+    URM_06();
     URM_06();
     Serial.print("Distance값 = ");
     Serial.println(theDistance);
     Serial.println("mm\n\r");
+
+    Serial.print("urm.receivedContent값= "); // 0 출력 
+    Serial.println(urm.receivedContent);
 
     if((urm.receivedContent >= theDistance-5) && (urm.receivedContent <= theDistance+5)){
       Serial.println("1번 조건문 실행");
@@ -151,8 +156,11 @@ void loop()
     }
 
     // 3번 조건 -  장애물 측정 거리가 1000 (1m) 이하일때 서보모터 멈추고 1000이하인 곳만 계속해서 초음파 거리 측정
-    else if (urm.receivedContent <= 1000){
+    else if (theDistance <= 1000){
       Serial.println("조건3실행");
       URM_06();
+      Serial.println("조건3종료");
     }
+    Serial.println("루프 종료");
+  }
 }
